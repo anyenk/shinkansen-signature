@@ -7,9 +7,10 @@ export default [
       file: 'dist/index.js',
       format: 'cjs',
       sourcemap: true,
+      exports: 'named',
     },
     plugins: [typescript()],
-    external: [],
+    external: ['jose', 'node-forge'],
   },
   {
     input: 'src/index.ts',
@@ -19,6 +20,6 @@ export default [
       sourcemap: true,
     },
     plugins: [typescript()],
-    external: [],
+    external: ['jose', 'node-forge'],
   },
 ];
