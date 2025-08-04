@@ -1,5 +1,9 @@
 # @anyenk/shinkansen-signature
 
+[![CI](https://github.com/anyenk/shinkansen-signature/actions/workflows/ci.yml/badge.svg)](https://github.com/anyenk/shinkansen-signature/actions/workflows/ci.yml)
+[![npm version](https://badge.fury.io/js/%40anyenk%2Fshinkansen-signature.svg)](https://badge.fury.io/js/%40anyenk%2Fshinkansen-signature)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A TypeScript library for creating and verifying signatures for Shinkansen (https://shinkansen.finance/) integration according to their security specification.
 
 **Documentation:**

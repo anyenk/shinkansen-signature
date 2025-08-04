@@ -16,7 +16,8 @@
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "publish:public": "npm publish --access public"
   },
   "keywords": [
     "shinkansen",
@@ -42,6 +43,9 @@
   "homepage": "https://github.com/anyenk/shinkansen-signature#readme",
   "engines": {
     "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "jose": "^5.2.0",
