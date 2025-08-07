@@ -44,27 +44,46 @@ export async function verifySignature(options: VerifySignatureOptions): Promise<
     const certDer = header.x5c[0];
     const certPem = `-----BEGIN CERTIFICATE-----\n${certDer.match(/.{1,64}/g)?.join('\n')}\n-----END CERTIFICATE-----`;
 
-    // Validate certificate against trusted whitelist
+    // Parse the certificate from JWS header
+    let jwsCert;
+    try {
+      jwsCert = forge.pki.certificateFromPem(certPem);
+    } catch (certError) {
+      return { isValid: false, error: 'Invalid certificate format in JWS header' };
+    }
+
+    // Validate certificate against trusted whitelist using certificate fields
     const isTrusted = trustedCertificates.some(trustedCert => {
-      const trustedPem = trustedCert.startsWith('-----BEGIN CERTIFICATE-----') 
-        ? trustedCert 
-        : `-----BEGIN CERTIFICATE-----\n${trustedCert.match(/.{1,64}/g)?.join('\n')}\n-----END CERTIFICATE-----`;
-      return certPem === trustedPem;
+      try {
+        // Convert trusted certificate to PEM format if needed
+        const trustedPem = trustedCert.startsWith('-----BEGIN CERTIFICATE-----') 
+          ? trustedCert 
+          : `-----BEGIN CERTIFICATE-----\n${trustedCert.match(/.{1,64}/g)?.join('\n')}\n-----END CERTIFICATE-----`;
+        
+        // Parse trusted certificate
+        const trustedCertObj = forge.pki.certificateFromPem(trustedPem);
+        
+        // Compare certificate fields for a more robust match
+        const serialMatch = jwsCert.serialNumber === trustedCertObj.serialNumber;
+        const issuerMatch = jwsCert.issuer.hash === trustedCertObj.issuer.hash;
+        const subjectMatch = jwsCert.subject.hash === trustedCertObj.subject.hash;
+        const publicKeyMatch = forge.pki.publicKeyToPem(jwsCert.publicKey) === forge.pki.publicKeyToPem(trustedCertObj.publicKey);
+        
+        return serialMatch && issuerMatch && subjectMatch && publicKeyMatch;
+      } catch (error) {
+        // Skip invalid certificates in trusted list
+        return false;
+      }
     });
 
     if (!isTrusted) {
       return { isValid: false, error: 'Certificate not in trusted whitelist' };
     }
 
-    // Verify certificate is not expired
-    try {
-      const cert = forge.pki.certificateFromPem(certPem);
-      const now = new Date();
-      if (now < cert.validity.notBefore || now > cert.validity.notAfter) {
-        return { isValid: false, error: 'Certificate is expired or not yet valid' };
-      }
-    } catch (certError) {
-      return { isValid: false, error: 'Invalid certificate format' };
+    // Verify certificate is not expired (using already parsed certificate)
+    const now = new Date();
+    if (now < jwsCert.validity.notBefore || now > jwsCert.validity.notAfter) {
+      return { isValid: false, error: 'Certificate is expired or not yet valid' };
     }
 
     // Import public key from certificate
