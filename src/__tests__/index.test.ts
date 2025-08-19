@@ -28,6 +28,20 @@ describe('verifySignature', () => {
     expect(result.error).toContain('Missing x5c certificate');
   });
 
+  it('should reject invalid certificate format in JWS header', async () => {
+    // JWS with x5c containing invalid certificate data
+    const jwsWithInvalidCert = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJQUzI1NiIsIng1YyI6WyJpbnZhbGlkLWNlcnRpZmljYXRlLWRhdGEiXX0.payload.signature';
+    const options: VerifySignatureOptions = {
+      jws: jwsWithInvalidCert,
+      payload: mockPayload,
+      trustedCertificates: [mockCertificate]
+    };
+
+    const result = await verifySignature(options);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toContain('Invalid certificate format in JWS header');
+  });
+
   it('should reject untrusted certificate', async () => {
     // Use the real Shinkansen JWS but with a different trusted certificate
     const realJws = 'eyJhbGciOiJQUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sIng1YyI6WyJNSUlFSnpDQ0F3K2dBd0lCQWdJVUFJMFVIRjIzbEdDMzJScThhaDgyV29kWU8zTXdEUVlKS29aSWh2Y05BUUVMQlFBd2dhSXhDekFKQmdOVkJBWVRBa05NTVJZd0ZBWURWUVFJREExTlpYUnliM0J2YkdsMFlXNWhNUkV3RHdZRFZRUUhEQWhUWVc1MGFXRm5iekVUTUJFR0ExVUVDZ3dLVTJocGJtdGhibk5sYmpFVE1CRUdBMVVFQ3d3S1UyaHBibXRoYm5ObGJqRVRNQkVHQTFVRUF3d0tVMmhwYm10aGJuTmxiakVwTUNjR0NTcUdTSWIzRFFFSkFSWWFaR1YyZEdWemRFQnphR2x1YTJGdWMyVnVMbVpwYm1GdVkyVXdIaGNOTWpRd09USTBNakF6TWpBMVdoY05Nall3T1RFME1qQXpNakExV2pDQm9qRUxNQWtHQTFVRUJoTUNRMHd4RmpBVUJnTlZCQWdNRFUxbGRISnZjRzlzYVhSaGJtRXhFVEFQQmdOVkJBY01DRk5oYm5ScFlXZHZNUk13RVFZRFZRUUtEQXBUYUdsdWEyRnVjMlZ1TVJNd0VRWURWUVFMREFwVGFHbHVhMkZ1YzJWdU1STXdFUVlEVlFRRERBcFRhR2x1YTJGdWMyVnVNU2t3SndZSktvWklodmNOQVFrQkZocGtaWFowWlhOMFFITm9hVzVyWVc1elpXNHVabWx1WVc1alpUQ0NBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQQURDQ0FRb0NnZ0VCQU8wMU0zZ3YreENibTVXUGJuVXExaTRNbzIxTnZGNkNPRTB4anlnRnVTYVBkTHNqNTRpYkhwKzkzTDBlSURFMUJxN05wbGtCM3hzZzNLMU5BMGJJOGpjWXpCSFRoK3JYelZjc1BrRTJOWndNTUVqUlN0TURVcVBYWkpNSkJka2tuVnIwR25qL0dmNWZQdzNzLytWYlRCYjIwQ3ZWamVxTG1DbmJxeTNKRm91VkkvUWlhOVhvOFdWMzlDMDVFRlc2ZENpazhPWWFzSHlHMFFjVkxrb281aU16cUpXRlZWc3pZaXpVcjB6bTFSaXlUWnBKcnU4OWF3VEU2UmdSbGhXYU5GTlFmRFk5ZVdWTmtzczNzSlN3RWlaVmFWMFdITnVmSlBKbVdzZE16dXBjRnErNTJPWDhHbkcrMVFyUVVoYkROYUx2UUp4dWhPSDJtVnNrdWhIc3VQMENBd0VBQWFOVE1GRXdIUVlEVlIwT0JCWUVGQk9ZcjkwQ3pmWUJSb09Da1V2TWNOMVNIN1NMTUI4R0ExVWRJd1FZTUJhQUZCT1lyOTBDemZZQlJvT0NrVXZNY04xU0g3U0xNQThHQTFVZEV3RUIvd1FGTUFNQkFmOHdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQXd3T3BVTEpYVFNLU1JXMkQwa0ZDNmdQd1ZMTzh3T3luUlpIOC82T2UxNjQwK3o4aXFZbkpzR0RZOUg1Sk4wbHBMc1Z1ZzFRSUwzZU93RVpZUEt4SFUvMUQzZVZYYmE0a1puTjRVVFZZbUtXdW1sbGw5TFdvZ0lEUW5Ja1JGREdDUWhET3g1MUUwcWdPb0hhM2RMZmd6VitnMCtHRTFoMFBCbnozWUpGU1lNbVBGNEtPNUN6dFFZRHZrb3Z0aER5clozWmFjckJ6dlB6U281SmFrWXpGV2ZMKzhROGR2N25vL3M4UlBOQklDS3pBeExFb0tibTA4OVdCYktBSTJhQmNqUVE1YjFheENjSjVJbnlRL1RTd0c2UXd2aDc3bE9lK2hxN1VUdWZKbC9acUJHZnpNcVkrdlY1TzRDcUkzTkVSREVwV0JrNUROSVVpMzh6S3htVkpBPSJdfQ..xxs8LI4Bke8nwu8xf9zjTzxwQHeo9l3f78BK1A_tlvx1r-ZXrC0-s9c_yiCD0SKv-konDUOh6u8JlCHUKOBEbgFadP6fS87212gQcDt3ltRQn7C_8qVbG23Hy7uxYSYHFbfs7w1RKWvbgzo9j8ICSazbm-2SKeLvPSnPqhiFcQQ9Md2z11BEALcWv778uvtHU6pLpPxBFsgMbh1CUP3bY7GtSitpba8hPyKP3doCCTUYEa4lADDxjmzRKY-XIzbiEVO82GMHExNucmTB1cTM-hQX3QJoWPDzAHqVIMeAObyQZrJal8_dje-9hUEwZqyAz0nWGewgKeXn3ipx43-MLg';
@@ -58,6 +72,72 @@ describe('createSignature', () => {
     const result = await createSignature(options);
     expect(result.signature).toBe('');
     expect(result.error).toContain('Invalid private key format');
+  });
+
+  it('should return error for invalid certificate format', async () => {
+    // Using the actual valid private key from integration tests
+    const validPrivateKey = `-----BEGIN PRIVATE KEY-----
+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
+UzOio9Sd/Al9TYVYsNI0+oPIpnsyqg==
+-----END PRIVATE KEY-----`;
+    
+    const options: CreateSignatureOptions = {
+      payload: mockPayload,
+      privateKey: validPrivateKey,
+      certificate: '-----BEGIN CERTIFICATE-----\nInvalidCertificateData\n-----END CERTIFICATE-----'
+    };
+
+    const result = await createSignature(options);
+    expect(result.signature).toBe('');
+    expect(result.error).toContain('Invalid certificate format');
   });
 
   it('should return error for invalid inputs', async () => {
