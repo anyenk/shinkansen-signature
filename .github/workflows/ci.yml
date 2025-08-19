@@ -8,6 +8,7 @@ on:
 
 jobs:
   test:
+    name: Run tests and collect coverage
     runs-on: ubuntu-latest
     
     strategy:
@@ -32,8 +33,14 @@ jobs:
     - name: Run type checking
       run: npm run typecheck
     
-    - name: Run tests
-      run: npm test
+    - name: Run tests (with coverage)
+      run: npm run test:coverage
+
+    - name: Upload results to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: anyenk/shinkansen-signature
     
     - name: Build
       run: npm run build
